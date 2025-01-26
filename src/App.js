@@ -201,19 +201,36 @@ function App() {
     };
 
     const initializeContract = async () => {
-        const contractAddress = process.env.REACT_APP_CONTRACT_ADDRESS;
-        if (!contractAddress) {
-            throw new Error('Contract address not set in environment variables');
-        }
+        try {
+            const contractAddress = process.env.REACT_APP_CONTRACT_ADDRESS;
+            if (!contractAddress) {
+                throw new Error('Contract address not set in environment variables');
+            }
 
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const signer = provider.getSigner();
-        const auctionContract = new ethers.Contract(
-            contractAddress,
-            AuctionSystemABI.abi,
-            signer
-        );
-        setContract(auctionContract);
+            // Add error handling for provider
+            if (!window.ethereum) {
+                throw new Error('MetaMask is not installed');
+            }
+
+            const provider = new ethers.providers.Web3Provider(window.ethereum);
+            const signer = provider.getSigner();
+            
+            // Add error handling for contract initialization
+            const auctionContract = new ethers.Contract(
+                contractAddress,
+                AuctionSystemABI.abi,
+                signer
+            );
+
+            if (!auctionContract) {
+                throw new Error('Failed to initialize contract');
+            }
+
+            setContract(auctionContract);
+        } catch (error) {
+            console.error('Contract initialization error:', error);
+            toast.error(error.message || 'Failed to initialize contract');
+        }
     };
 
     if (loading) {
